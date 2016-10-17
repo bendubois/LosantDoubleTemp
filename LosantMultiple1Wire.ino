@@ -40,17 +40,17 @@ DeviceAddress Probe04 = { 0x28, 0x9A, 0x80, 0x40, 0x04, 0x00, 0x00, 0xD5 };
 DeviceAddress Probe05 = { 0x28, 0xE1, 0xC7, 0x40, 0x04, 0x00, 0x00, 0x0D };*/
 
 // WiFi credentials.
-const char* WIFI_SSID = "SSID";
-const char* WIFI_PASS = "password";
+const char* WIFI_SSID = "Moenia";
+const char* WIFI_PASS = "Dubois Family Network";
 
 // Losant credentials.
-const char* LOSANT_DEVICE_ID = "device ID";
-const char* LOSANT_ACCESS_KEY = "access key";
-const char* LOSANT_ACCESS_SECRET = "secret";
+const char* LOSANT_DEVICE_ID = "57f7b0016612d6010040a724";
+const char* LOSANT_ACCESS_KEY = "0b461373-b983-478c-80d6-d5b968666755";
+const char* LOSANT_ACCESS_SECRET = "ddf22c56badbd4de0c66e924254886d75aa0b8a6678e1bd16c94c1b9891d6c74";
 
-//const int BUTTON_PIN = 5;
 float Temp1 = 0;
 float Temp2 = 0;
+int dataDelay = 0;
 
 WiFiClientSecure wifiClient;
 
@@ -67,7 +67,7 @@ void connect() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(1000);
     Serial.print(".");
   }
 
@@ -96,7 +96,6 @@ void tempJSON() {
   Serial.println("Sending temp.");
 
   // Losant uses a JSON protocol. Construct the simple state object.
-  // { "button" : true }
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["Temperature1"] = Temp1;
@@ -144,7 +143,6 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
   if(toReconnect) {
     connect();
   }
-
   device.loop();
   
   delay(1000);
@@ -157,8 +155,8 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
   // Command all devices on bus to read temperature  
   sensors.requestTemperatures();  
   
-  Temp1 = sensors.getTempC(Probe01);
-  Temp2 = sensors.getTempC(Probe02);
+  Temp1 = sensors.getTempF(Probe01);
+  Temp2 = sensors.getTempF(Probe02);
   
   Serial.print("Probe 01 temperature is:   ");
   printTemperature(Probe01);
@@ -179,9 +177,14 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
   Serial.print("Probe 05 temperature is:   ");
   printTemperature(Probe05);
   Serial.println();*/
-   
-  tempJSON();
-  delay(1000);
+
+  if(dataDelay >=20){
+    tempJSON();
+    dataDelay = 0;
+  }
+
+  dataDelay ++;
+  //delay(20000); //delay between sending data points
 }//--(end main loop )---
 
 /*-----( Declare User-written Functions )-----*/
