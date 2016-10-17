@@ -40,13 +40,13 @@ DeviceAddress Probe04 = { 0x28, 0x9A, 0x80, 0x40, 0x04, 0x00, 0x00, 0xD5 };
 DeviceAddress Probe05 = { 0x28, 0xE1, 0xC7, 0x40, 0x04, 0x00, 0x00, 0x0D };*/
 
 // WiFi credentials.
-const char* WIFI_SSID = "Moenia";
-const char* WIFI_PASS = "Dubois Family Network";
+const char* WIFI_SSID = "SSID";
+const char* WIFI_PASS = "password";
 
 // Losant credentials.
-const char* LOSANT_DEVICE_ID = "57f7b0016612d6010040a724";
-const char* LOSANT_ACCESS_KEY = "0b461373-b983-478c-80d6-d5b968666755";
-const char* LOSANT_ACCESS_SECRET = "ddf22c56badbd4de0c66e924254886d75aa0b8a6678e1bd16c94c1b9891d6c74";
+const char* LOSANT_DEVICE_ID = "device ID";
+const char* LOSANT_ACCESS_KEY = "access key";
+const char* LOSANT_ACCESS_SECRET = "secret";
 
 //const int BUTTON_PIN = 5;
 float Temp1 = 0;
