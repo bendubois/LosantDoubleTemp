@@ -10,6 +10,8 @@
    
 /*-----( Import needed libraries )-----*/
 #include <ESP8266WiFi.h>
+
+// Get Losant library here: https://github.com/Losant/losant-mqtt-arduino
 #include <Losant.h>
 
 // Get 1-wire Library here: http://www.pjrc.com/teensy/td_libs_OneWire.html
@@ -17,6 +19,10 @@
 
 //Get DallasTemperature Library here:  http://milesburton.com/Main_Page?title=Dallas_Temperature_Control_Library
 #include <DallasTemperature.h>
+
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 /*-----( Declare Constants and Pin Numbers )-----*/
 #define ONE_WIRE_BUS_PIN 5
@@ -40,21 +46,40 @@ DeviceAddress Probe04 = { 0x28, 0x9A, 0x80, 0x40, 0x04, 0x00, 0x00, 0xD5 };
 DeviceAddress Probe05 = { 0x28, 0xE1, 0xC7, 0x40, 0x04, 0x00, 0x00, 0x0D };*/
 
 // WiFi credentials.
-const char* WIFI_SSID = "SSID";
-const char* WIFI_PASS = "password";
+const char* WIFI_SSID = "Moenia";
+const char* WIFI_PASS = "Dubois Family Network";
 
 // Losant credentials.
-const char* LOSANT_DEVICE_ID = "device ID";
-const char* LOSANT_ACCESS_KEY = "access key";
-const char* LOSANT_ACCESS_SECRET = "secret";
+const char* LOSANT_DEVICE_ID = "57f7b0016612d6010040a724";
+const char* LOSANT_ACCESS_KEY = "0b461373-b983-478c-80d6-d5b968666755";
+const char* LOSANT_ACCESS_SECRET = "ddf22c56badbd4de0c66e924254886d75aa0b8a6678e1bd16c94c1b9891d6c74";
 
-//const int BUTTON_PIN = 5;
 float Temp1 = 0;
 float Temp2 = 0;
+int dataDelay = 0;
 
 WiFiClientSecure wifiClient;
 
 LosantDevice device(LOSANT_DEVICE_ID);
+
+/*-----( Declare User-written Functions )-----*/
+void printTemperature(DeviceAddress deviceAddress)
+{
+
+float tempC = sensors.getTempC(deviceAddress);
+
+   if (tempC == -127.00) 
+   {
+   Serial.print("Error getting temperature  ");
+   } 
+   else
+   {
+   Serial.print("C: ");
+   Serial.print(tempC);
+   Serial.print(" F: ");
+   Serial.print(DallasTemperature::toFahrenheit(tempC));
+   }
+}// End printTemperature
 
 void connect() {
 
@@ -67,7 +92,7 @@ void connect() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(1000);
     Serial.print(".");
   }
 
@@ -96,7 +121,6 @@ void tempJSON() {
   Serial.println("Sending temp.");
 
   // Losant uses a JSON protocol. Construct the simple state object.
-  // { "button" : true }
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["Temperature1"] = Temp1;
@@ -124,6 +148,30 @@ void setup()   /****** SETUP: RUNS ONCE ******/
   sensors.setResolution(Probe05, 10);*/
 
   connect();
+
+  //begin OTA setup module
+   ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+  Serial.println("Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  //end OTA setup module
 }//--(end setup )---
 
 void loop()   /****** LOOP: RUNS CONSTANTLY ******/
@@ -144,7 +192,6 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
   if(toReconnect) {
     connect();
   }
-
   device.loop();
   
   delay(1000);
@@ -157,8 +204,8 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
   // Command all devices on bus to read temperature  
   sensors.requestTemperatures();  
   
-  Temp1 = sensors.getTempC(Probe01);
-  Temp2 = sensors.getTempC(Probe02);
+  Temp1 = sensors.getTempF(Probe01);
+  Temp2 = sensors.getTempF(Probe02);
   
   Serial.print("Probe 01 temperature is:   ");
   printTemperature(Probe01);
@@ -179,27 +226,20 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
   Serial.print("Probe 05 temperature is:   ");
   printTemperature(Probe05);
   Serial.println();*/
-   
-  tempJSON();
-  delay(1000);
+
+  if(dataDelay >=20){
+    tempJSON();
+    dataDelay = 0;
+  }
+
+  dataDelay ++;
+  //delay(20000); //delay between sending data points
+
+  //begin OTA loop module
+  ArduinoOTA.handle();
+  //end OTA loop module
+    
 }//--(end main loop )---
 
-/*-----( Declare User-written Functions )-----*/
-void printTemperature(DeviceAddress deviceAddress)
-{
 
-float tempC = sensors.getTempC(deviceAddress);
-
-   if (tempC == -127.00) 
-   {
-   Serial.print("Error getting temperature  ");
-   } 
-   else
-   {
-   Serial.print("C: ");
-   Serial.print(tempC);
-   Serial.print(" F: ");
-   Serial.print(DallasTemperature::toFahrenheit(tempC));
-   }
-}// End printTemperature
 //*********( THE END )***********
