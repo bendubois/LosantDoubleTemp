@@ -40,8 +40,8 @@ DeviceAddress Probe04 = { 0x28, 0x9A, 0x80, 0x40, 0x04, 0x00, 0x00, 0xD5 };
 DeviceAddress Probe05 = { 0x28, 0xE1, 0xC7, 0x40, 0x04, 0x00, 0x00, 0x0D };*/
 
 // WiFi credentials.
-const char* WIFI_SSID = "Moenia";
-const char* WIFI_PASS = "Dubois Family Network";
+const char* WIFI_SSID = "--";
+const char* WIFI_PASS = "--";
 
 // Losant credentials.
 const char* LOSANT_DEVICE_ID = "--";
